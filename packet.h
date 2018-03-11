@@ -36,6 +36,7 @@
 #include "mcc_generated_files/mcc.h"
 #include "mcc_generated_files/eusart.h"
 #include "common.h"
+#include "settings.h"
 
 /*
  * Packet structure
@@ -57,8 +58,10 @@
 
 #define PACKET_START_FLAG      0xAB
 #define PACKET_END_FLAG        0xBA
-#define PACKET_MAX_SIZE        128
+#define PACKET_PAYLOAD_MAX_LEN 128
 #define PACKET_HEADER_LEN      5
+#define PACKET_PAYLOAD_EXTRA   2
+#define PACKET_MAX_SIZE		   PACKET_HEADER_LEN + PACKET_PAYLOAD_MAX_LEN + PACKET_PAYLOAD_EXTRA
 
 #define PACKET_CHECKSUM_OK 	   0
 #define PACKET_RX_OK           1
@@ -66,8 +69,8 @@
 typedef enum {PACKET_State_idle,
               PACKET_State_start,
               PACKET_State_type,
-              PACKET_State_length_h,
               PACKET_State_length_l,
+              PACKET_State_length_h,
               PACKET_State_header_checksum,
               PACKET_State_getting_payload,
               PACKET_State_payload,
@@ -79,11 +82,31 @@ typedef enum {PACKET_Type_temp = 0,
         PACKET_Type_level = 1
 }PACKET_Type_t;
 
-uint16_t PACKET_CreatePacket(uint16_t send_data_length, uint8_t *send_data, uint8_t *packet, PACKET_Type_t packet_type);
+typedef union {
+    uint8_t packet_arr[PACKET_MAX_SIZE];
+    __pack struct {
+        uint8_t start_flag;
+        uint8_t payload_type;
+        uint16_t payload_len;
+        uint8_t header_checksum;
+        union {
+            uint8_t payload[PACKET_PAYLOAD_MAX_LEN];
+            SETTINGS_payload_t stgs_payload;
+        };
+        uint8_t checksum;
+        uint8_t end_flag;
+    };
+}PACKET_pkt_t;
+
+
+void PACKET_Initialize(void);
+void PACKET_SendPacket(PACKET_pkt_t *pkt);
+void PACKET_UpdateAndSend(PACKET_pkt_t *pkt);
+void PACKET_CreatePacket(PACKET_pkt_t *pkt, uint16_t send_data_length, uint8_t *send_data, PACKET_Type_t packet_type);
+PACKET_pkt_t * PACKET_get_rx_packet_ptr(void);
 uint8_t PACKET_calculate_checksum(uint8_t *packet, uint16_t len);
 uint8_t PACKET_Available(void);
 uint8_t PACKET_EUSART_Bytes_Available(void);
 uint8_t PACKET_handle_byte(uint8_t data_byte);
-void PACKET_Initialize(void);
 #endif	/* PACKET_H */
 

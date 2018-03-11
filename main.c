@@ -39,27 +39,36 @@
     MICROCHIP PROVIDES THIS SOFTWARE CONDITIONALLY UPON YOUR ACCEPTANCE OF THESE
     TERMS.
 */
-
+#include <xc.h>
 #include "mcc_generated_files/mcc.h"
 #include "packet.h"
 #include "common.h"
+#include "eeprom.h"
+#include "settings.h"
 
 #define TANK_MIN_LEVEL 200
 #define V_TEMP_MIN 500
-#define TANK_FULL_LEVEL 267 + TANK_MIN_LEVEL
+#define INITIAL_TANK_PUMP_TURN_ON_LEVEL 167 + TANK_MIN_LEVEL
+#define INITIAL_TANK_PUM_TURN_OFF_LEVEL 267 + TANK_MIN_LEVEL
+void handle_rx_packet(void);
+
+settings_t settings;
 
 /*
                          Main application
  */
 void main(void)
 {
-    uint16_t temp, temp_f, level, level_ft, temp_int;
+    uint16_t temp, temp_f, level, level_ft;
     uint8_t send_data[8], *send_data_ptr;
     uint8_t send_packet[32], *send_packet_ptr;
     uint16_t send_packet_len;
     uint16_t i;
     
-    
+    // retrieve settings from eeprom
+    //SETTINGS_load_all_from_eeprom(&settings);
+    EEPROM_load_all_settings(&settings);
+
     // initialize the device
     SYSTEM_Initialize();
     
@@ -106,12 +115,12 @@ void main(void)
         
         // don't go negative
         if (level < TANK_MIN_LEVEL) {level = TANK_MIN_LEVEL;} 
-        if (level < TANK_FULL_LEVEL)
+        if (level < settings.tank_pump_turn_on_level)
         {
             // Turn on fill valves
             Fill_SW_SetHigh();
         }
-        else
+        else if (level > settings.tank_pump_turn_off_level)
         {
             Fill_SW_SetLow();
         }
@@ -146,7 +155,8 @@ void main(void)
         if (PACKET_Available())
         {
             //DEBUG_PRINT(("packet available"));
-            printf("packet available\n");
+            DEBUG_PRINT(("packet available\n"));
+            handle_rx_packet();
             //for (i = 0; i < send_packet_len; i++)
             //{
             //    EUSART_Write(send_packet[i]);
@@ -162,6 +172,98 @@ void main(void)
 
 
     }
+}
+
+
+void handle_rx_packet(void)
+{
+    PACKET_pkt_t *pkt_p;
+
+    SETTINGS_payload_t *stgs_pld_p;
+    
+    pkt_p = PACKET_get_rx_packet_ptr();
+
+    if (pkt_p->payload_type == 0x00)
+    { // type echo
+        PACKET_SendPacket(pkt_p);
+    }
+    else if (pkt_p->payload_type == 0x01)
+    { // setting - format: [operation, command, setting_low_byte, setting_high_byte]
+        if (pkt_p->payload_len < 4)
+        { // malformed
+            // send packet bad message
+            return;
+        }
+
+        stgs_pld_p = &(pkt_p->stgs_payload);
+
+        if (stgs_pld_p->operation == STGS_PLD_OP_LOAD)
+        { // operation load_from_eeprom
+            if (stgs_pld_p->load_command == STGS_PLD_CMD_LOAD_ALL)
+            { // load all 
+                //SETTINGS_load_all_from_eeprom(&settings);
+                EEPROM_load_all_settings(&settings);
+                // TODO: maybe verify?
+
+                // respond that it is done
+                PACKET_UpdateAndSend(pkt_p);
+            }
+            if (stgs_pld_p->load_command == STGS_PLD_CMD_LOAD_ONE)
+            { // load specific setting
+                //SETTINGS_load_from_eeprom(&settings, stgs_pld_p->load_setting_num);
+                EEPROM_load_setting(&settings, stgs_pld_p->load_setting_num);
+                // TODO: maybe verify?
+
+                // respond that it is done
+                PACKET_UpdateAndSend(pkt_p);
+            }
+        }
+        else if (stgs_pld_p->operation == STGS_PLD_OP_SAVE)
+        {
+            if (stgs_pld_p->load_command == STGS_PLD_CMD_SAVE_ALL)
+            { // store all
+                //SETTINGS_save_all_to_eeprom(&settings);
+                EEPROM_store_all_settings(&settings);
+                // TODO: maybe verify?
+
+                // respond that it is done
+                PACKET_UpdateAndSend(pkt_p);
+            }
+            if (stgs_pld_p->load_command == STGS_PLD_CMD_SAVE_ONE)
+            { // store specific setting
+                //SETTINGS_save_to_eeprom(&settings, stgs_pld_p->load_setting_num);
+                EEPROM_store_setting(&settings, stgs_pld_p->load_setting_num);
+                // TODO: maybe verify?
+
+                // respond that it is done
+                PACKET_UpdateAndSend(pkt_p);
+            }
+            
+        }
+
+        else if (stgs_pld_p->operation == STGS_PLD_OP_WRITE)
+        {
+            SETTINGS_write(&settings, stgs_pld_p->write_setting_num, stgs_pld_p->setting_value);
+            // TODO: maybe verify?
+
+            // respond that it is done
+            PACKET_UpdateAndSend(pkt_p);
+        }
+        else if (stgs_pld_p->operation == STGS_PLD_OP_READ)
+        {
+            stgs_pld_p->setting_value = SETTINGS_read(&settings, stgs_pld_p->read_setting_num);
+            // respond with setting
+            PACKET_UpdateAndSend(pkt_p);
+        }
+
+
+    }
+    else if (pkt_p->payload_type == 0x02)
+    {
+
+    }
+
+
 }
 /**
  End of File
