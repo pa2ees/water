@@ -78,8 +78,9 @@ typedef enum {PACKET_State_idle,
               PACKET_State_end_flag
 }PACKET_RxState_t;
 
-typedef enum {PACKET_Type_temp = 0,
-        PACKET_Type_level = 1
+typedef enum {
+    PACKET_Type_temp = 0,
+    PACKET_Type_level = 1
 }PACKET_Type_t;
 
 typedef union {
@@ -91,10 +92,12 @@ typedef union {
         uint8_t header_checksum;
         union {
             uint8_t payload[PACKET_PAYLOAD_MAX_LEN];
-            SETTINGS_payload_t stgs_payload;
+            struct {
+                SETTINGS_payload_t stgs_payload;
+                uint8_t checksum;
+                uint8_t end_flag;
+            };
         };
-        uint8_t checksum;
-        uint8_t end_flag;
     };
 }PACKET_pkt_t;
 

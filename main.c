@@ -49,10 +49,11 @@
 #define TANK_MIN_LEVEL 200
 #define V_TEMP_MIN 500
 #define INITIAL_TANK_PUMP_TURN_ON_LEVEL 167 + TANK_MIN_LEVEL
-#define INITIAL_TANK_PUM_TURN_OFF_LEVEL 267 + TANK_MIN_LEVEL
+#define INITIAL_TANK_PUMP_TURN_OFF_LEVEL 267 + TANK_MIN_LEVEL
 void handle_rx_packet(void);
 
 settings_t settings;
+uint16_t curr_tank_level, curr_temp_f;
 
 /*
                          Main application
@@ -103,7 +104,8 @@ void main(void)
         
         // convert deg C to deg F
         temp_f = (uint16_t) (temp * (9.0 / 5.0) + 32);
-        
+
+        curr_temp_f = temp_f;
         //ADC_SelectChannel(channel_Temp);
         //ADC_TemperatureAcquisitionDelay();
         //temp_int = ADC_GetConversion(channel_Temp);
@@ -126,7 +128,11 @@ void main(void)
         }
         
         // convert millivolts to water height in inches (11.25 per inch))
-        level_ft = ((level) - TANK_MIN_LEVEL) / 45 * 4; 
+        level_ft = ((level) - TANK_MIN_LEVEL) / 45 * 4;
+        curr_tank_level = level_ft;
+
+
+        
         //RS485_TX_EN_SetHigh();
         
         send_data_ptr = send_data;
@@ -155,7 +161,7 @@ void main(void)
         if (PACKET_Available())
         {
             //DEBUG_PRINT(("packet available"));
-            DEBUG_PRINT(("packet available\n"));
+            DEBUG_PRINT_OFF(("packet available\n"));
             handle_rx_packet();
             //for (i = 0; i < send_packet_len; i++)
             //{
@@ -242,7 +248,7 @@ void handle_rx_packet(void)
         }
 
         else if (stgs_pld_p->operation == STGS_PLD_OP_WRITE)
-        {
+        { // write values to settings
             SETTINGS_write(&settings, stgs_pld_p->write_setting_num, stgs_pld_p->setting_value);
             // TODO: maybe verify?
 
@@ -250,7 +256,7 @@ void handle_rx_packet(void)
             PACKET_UpdateAndSend(pkt_p);
         }
         else if (stgs_pld_p->operation == STGS_PLD_OP_READ)
-        {
+        { // read values from settings.
             stgs_pld_p->setting_value = SETTINGS_read(&settings, stgs_pld_p->read_setting_num);
             // respond with setting
             PACKET_UpdateAndSend(pkt_p);
@@ -259,8 +265,23 @@ void handle_rx_packet(void)
 
     }
     else if (pkt_p->payload_type == 0x02)
-    {
+    { // type status
+        if (pkt_p->packet_arr[5] == 0x00)
+        { // read status
 
+            if (pkt_p->packet_arr[6] == 0x00)
+            { // get current temp
+                pkt_p->packet_arr[7] = curr_temp_f & 0xFF;
+                pkt_p->packet_arr[8] = (curr_temp_f >> 8) & 0xFF;
+                PACKET_UpdateAndSend(pkt_p);
+            }
+            else if (pkt_p->packet_arr[6] == 0x01)
+            { // get current tank level
+                pkt_p->packet_arr[7] = curr_tank_level & 0xFF;
+                pkt_p->packet_arr[8] = (curr_tank_level >> 8) & 0xFF;
+                PACKET_UpdateAndSend(pkt_p);
+            }
+        }
     }
 
 
