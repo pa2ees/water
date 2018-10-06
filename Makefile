@@ -104,6 +104,28 @@ help: .help-post
 .help-post: .help-impl
 # Add your post 'help' code here...
 
+### Adding option to program device ###
+
+# The following defines MP_JAVA_PATH
+ifeq "$(wildcard nbproject/Makefile-local-default.mk)" "nbproject/Makefile-local-default.mk"
+include nbproject/Makefile-local-default.mk
+endif
+
+DEFAULT_MAKEFILE=nbproject/Makefile-default.mk
+
+PATH_TO_IPE_JAR=$(PATH_TO_IDE_BIN)../mplab_ipe/
+IPE_JAR_NAME=ipecmd.jar
+CND_CONF=$(CONF)
+IMAGE_TYPE=production
+OUTPUT_SUFFIX=hex
+PROC=16F1829
+FINAL_IMAGE=$(CND_ARTIFACT_PATH_default)
+#/$(IMAGE_TYPE)/$(PROJECTNAME).$(IMAGE_TYPE).$(OUTPUT_SUFFIX)
+
+program: .prog-impl
+
+.prog-impl:
+	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -M -P$(PROC)
 
 
 # include project implementation makefile
