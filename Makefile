@@ -124,8 +124,13 @@ FINAL_IMAGE=$(CND_ARTIFACT_PATH_default)
 
 program: .prog-impl
 
+program-no-eeprom: .prog-impl-no-eeprom
+
 .prog-impl:
-	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -M -P$(PROC)
+	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -M -OL -P$(PROC)
+
+.prog-impl-no-eeprom:
+	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -MP -OL -P$(PROC)
 
 
 # include project implementation makefile
