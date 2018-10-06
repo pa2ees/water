@@ -1,6 +1,6 @@
 #include "eeprom.h"
 
-eeprom settings_t SETTINGS_stgs;
+__eeprom settings_t SETTINGS_stgs;
 
 void EEPROM_load_all_settings(settings_t *s)
 {

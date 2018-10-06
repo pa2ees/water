@@ -37,6 +37,7 @@
 #include "mcc_generated_files/eusart.h"
 #include "common.h"
 #include "settings.h"
+#include "status.h"
 
 /*
  * Packet structure
@@ -83,6 +84,7 @@ typedef enum {
     PACKET_Type_level = 1
 }PACKET_Type_t;
 
+
 typedef union {
     uint8_t packet_arr[PACKET_MAX_SIZE];
     __pack struct {
@@ -93,7 +95,10 @@ typedef union {
         union {
             uint8_t payload[PACKET_PAYLOAD_MAX_LEN];
             struct {
-                SETTINGS_payload_t stgs_payload;
+                union {
+                    SETTINGS_payload_t stgs_payload;
+                    STATUS_payload_t status_payload;
+                };
                 uint8_t checksum;
                 uint8_t end_flag;
             };

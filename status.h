@@ -1,3 +1,6 @@
+#ifndef STATUS_H
+#define STATUS_H
+
 // status payload operations
 #define STATUS_PLD_OP_READ 3
 
@@ -11,7 +14,7 @@ typedef union {
     __pack struct {
         uint8_t operation;
         union { //second byte
-            uint8_t read_setting_num;
+            uint8_t read_status_num;
         };
         union { // thrid and fourth bytes
             uint16_t status_value;
@@ -21,3 +24,5 @@ typedef union {
         
 
 }STATUS_payload_t;
+
+#endif /* STATUS_H */

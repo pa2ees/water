@@ -45,6 +45,7 @@
 #include "common.h"
 #include "eeprom.h"
 #include "settings.h"
+#include "status.h"
 
 #define TANK_MIN_LEVEL 200
 #define V_TEMP_MIN 500
@@ -53,7 +54,7 @@
 void handle_rx_packet(void);
 
 settings_t settings;
-uint16_t curr_tank_level, curr_temp_f;
+uint16_t curr_tank_level, curr_temp;
 
 /*
                          Main application
@@ -98,14 +99,18 @@ void main(void)
         
         // convert adc count to millivolts
         temp = temp * 2;
+
+
+        // leave the converstions to the python code.
         
         // subtract min temp offset and convert millivolts to degrees C
-        temp = (temp - V_TEMP_MIN) / 10;
+        // temp = (temp - V_TEMP_MIN) / 10;
         
         // convert deg C to deg F
-        temp_f = (uint16_t) (temp * (9.0 / 5.0) + 32);
+        // temp_f = (uint16_t) (temp * (9.0 / 5.0) + 32);
 
-        curr_temp_f = temp_f;
+        curr_temp = temp;
+
         //ADC_SelectChannel(channel_Temp);
         //ADC_TemperatureAcquisitionDelay();
         //temp_int = ADC_GetConversion(channel_Temp);
@@ -128,8 +133,10 @@ void main(void)
         }
         
         // convert millivolts to water height in inches (11.25 per inch))
-        level_ft = ((level) - TANK_MIN_LEVEL) / 45 * 4;
-        curr_tank_level = level_ft;
+        // level_ft = ((level) - TANK_MIN_LEVEL) / 45 * 4;
+        curr_tank_level = level;
+        // NOTE: I probably should leave this to the python code to convert
+        // and just deal with raw level data on the pic
 
 
         
@@ -186,6 +193,7 @@ void handle_rx_packet(void)
     PACKET_pkt_t *pkt_p;
 
     SETTINGS_payload_t *stgs_pld_p;
+    STATUS_payload_t *status_pld_p;
     
     pkt_p = PACKET_get_rx_packet_ptr();
 
@@ -265,20 +273,26 @@ void handle_rx_packet(void)
 
     }
     else if (pkt_p->payload_type == 0x02)
-    { // type status
-        if (pkt_p->packet_arr[5] == 0x00)
+    { // type status - format: [operation, command, status_low_byte, status_high_byte]
+
+        status_pld_p = &(pkt_p->status_payload);
+
+        if (status_pld_p->operation == STATUS_PLD_OP_READ)
         { // read status
 
-            if (pkt_p->packet_arr[6] == 0x00)
+
+            if (status_pld_p->read_status_num == STATUS_CURR_TEMP)
             { // get current temp
-                pkt_p->packet_arr[7] = curr_temp_f & 0xFF;
-                pkt_p->packet_arr[8] = (curr_temp_f >> 8) & 0xFF;
+                status_pld_p->status_value = curr_temp;
+                // pkt_p->packet_arr[7] = curr_temp_f & 0xFF;
+                // pkt_p->packet_arr[8] = (curr_temp_f >> 8) & 0xFF;
                 PACKET_UpdateAndSend(pkt_p);
             }
-            else if (pkt_p->packet_arr[6] == 0x01)
+            else if (status_pld_p->read_status_num == STATUS_CURR_TANK_LEVEL)
             { // get current tank level
-                pkt_p->packet_arr[7] = curr_tank_level & 0xFF;
-                pkt_p->packet_arr[8] = (curr_tank_level >> 8) & 0xFF;
+                status_pld_p->status_value = curr_tank_level;
+                // pkt_p->packet_arr[7] = curr_tank_level & 0xFF;
+                // pkt_p->packet_arr[8] = (curr_tank_level >> 8) & 0xFF;
                 PACKET_UpdateAndSend(pkt_p);
             }
         }

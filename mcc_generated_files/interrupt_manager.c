@@ -48,7 +48,7 @@
 #include "interrupt_manager.h"
 #include "mcc.h"
 
-void interrupt INTERRUPT_InterruptManager (void)
+void __interrupt() INTERRUPT_InterruptManager (void)
 {
     // interrupt handler
     if(INTCONbits.PEIE == 1)
