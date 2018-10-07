@@ -32,7 +32,7 @@ typedef union{
         uint16_t tank_pump_turn_on_level;
         uint16_t tank_pump_turn_off_level;
     };
-    uint16_t arr[2];
+    uint16_t arr[STGS_NUM_OF_SETTINGS];
 }settings_t;
 
 /**************

@@ -1,0 +1,28 @@
+Sensors
+ - Pressure based water level sensor (should there be one in each tank?)
+ - overflow float switch (should there be a redundant one? one in each tank?)
+ - empty float switch?
+
+Thresholds
+ 1 open fill valve water level threshold (when sprinkler pump not on) (half full)
+ 2 close fill valve water level threshold (when sprinkler pump not on) (near full)
+ 3 turn off sprinkler pump water level threshold (near empty)
+ 4 turn on sprinkler pump water level threshold (near full)
+ 5 overflow (overflow float switch)
+ 6 underflow (empty float switch)
+
+Logic for filling tanks no pump
+ - when level gets down to turn on threshold 1
+ - open fill valves
+ - wait until threshold 2 (from pressure sensor) crosses threshold in settings
+ - should there be a timeout? ie. 6 hours?
+ - close valves
+ 
+Logic for watering
+ - if water level below overflow, turn on filling
+ - If water level above threshold 3 when watering commences, turn on sprinkler pump
+   - Maybe leave this out, so tanks fill, and then sprinkler pump turns on?
+ - when water level gets below threshold 3, turn off pump
+ - when water level gets above threshold 4, turn on pump
+   - Should there be a fill pump rest period in here? (maybe 1 hour)
+ - if water level goes above overflow while sprinkler pump on, shut off pump and filling, and raise alert (something is broken)
