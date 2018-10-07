@@ -1,7 +1,29 @@
-Sensors
+Tank Controller
  - Pressure based water level sensor (should there be one in each tank?)
  - overflow float switch (should there be a redundant one? one in each tank?)
  - empty float switch?
+ - turn on/off fill valve
+ - sense current of valve
+ - Sprinkler pump turn on/off
+ - sense current of sprinkler pump relay
+ - sense current of sprinkler pump itself?
+
+valve controller
+ - turn on/off valve
+ - sense current of valve (to make sure it's on, and not shorted)
+ - sense temperature
+
+Comms protocol
+ - need to incorporate a method of addressing controllers (tank or valve)
+   - change the type byte for an address byte in header
+   - Add type byte into the payload
+   - Add a sender address byte to header for responses
+
+Comms PHY
+ - what baud rate?
+ - use oscillator in pic to do OOK over an ac coupled line?
+   - Do I need an amplifier for this?
+ 
 
 Thresholds
  1 open fill valve water level threshold (when sprinkler pump not on) (half full)
@@ -26,3 +48,22 @@ Logic for watering
  - when water level gets above threshold 4, turn on pump
    - Should there be a fill pump rest period in here? (maybe 1 hour)
  - if water level goes above overflow while sprinkler pump on, shut off pump and filling, and raise alert (something is broken)
+
+Setup option 1
+ - tank controller is just another peripheral on the bus.
+   - This allows for two tank controllers for level sensing, valve on sensing, etc
+ - main controller (or server) talks to the tank controller and all valve controllers
+ - keep-alive signal from main controller to each other controller to make sure things are working
+ - server keeps track of watering time
+ 
+Setup option 2
+ - tank controller is what talks to all the valve controllers
+ - server tells tank controller what to do and when (ie turn on station 1 and 2, turn off all)
+ - server keeps track of watering time
+ - server polls for when watering pump is on or not (to keep track of actual watering time)
+ - keep-alive signals to make sure everything is working
+
+Setup option 3
+ - Tank controller is what talks to all the valve controllers
+ - server transmits schedule to tank controller
+ - tank controller keeps track of time and turns things on or off 
