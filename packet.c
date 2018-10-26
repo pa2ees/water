@@ -34,11 +34,18 @@ void PACKET_SendPacket(PACKET_pkt_t *pkt)
 
 void PACKET_UpdateAndSend(PACKET_pkt_t *pkt)
 {
-    uint8_t cksm;
+    //uint8_t cksm;
     DEBUG_PRINT_OFF(("Update and Send\n"));
+    pkt->header_checksum = PACKET_calculate_checksum(pkt->packet_arr, PACKET_HEADER_LEN);
     pkt->checksum = PACKET_calculate_checksum(pkt->packet_arr, pkt->payload_len + PACKET_HEADER_LEN);
     
     PACKET_SendPacket(pkt);
+}
+
+void PACKET_UpdateAddresses(PACKET_pkt_t *pkt, uint8_t dest_address, uint8_t src_address)
+{
+    pkt->dest_address = dest_address;
+    pkt->src_address = src_address;
 }
 
 /* PACKET_CreatePacket
@@ -49,7 +56,7 @@ void PACKET_UpdateAndSend(PACKET_pkt_t *pkt)
  * 
  * return value     the length of packet
  */
-void PACKET_CreatePacket(PACKET_pkt_t *pkt, uint16_t send_data_length, uint8_t *send_data, PACKET_Type_t packet_type)
+void PACKET_CreatePacket(PACKET_pkt_t *pkt, uint16_t send_data_length, uint8_t *send_data, PACKET_Type_t packet_type, uint8_t dest_addr, uint8_t src_addr)
 {
     uint8_t *packet_ptr;
     uint8_t i = 0;
@@ -58,17 +65,22 @@ void PACKET_CreatePacket(PACKET_pkt_t *pkt, uint16_t send_data_length, uint8_t *
 
     // Loading start flag
     pkt->start_flag = PACKET_START_FLAG;
+
+    // loading destination address
+    pkt->dest_address = dest_addr;
+
+    // loading source address (that's us!)
+    pkt->src_address = src_addr;
     
-    // Loading Type
-    pkt->payload_type = (uint8_t)packet_type;
-    
-    // Loading Payload Length high byte
+    // Loading Payload Length 
     pkt->payload_len = send_data_length;
+    
+    // Loading Payload Type
+    pkt->payload_type = (uint8_t)packet_type;
     
     // Loading Header Checksum
     pkt->header_checksum = PACKET_calculate_checksum(pkt->packet_arr, PACKET_HEADER_LEN-1);
 
-    
     // Loading Payload
     for (i = 0; i < send_data_length; i++)
     {
@@ -150,20 +162,20 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
         }
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
-        PACKET_RxState = PACKET_State_type;
+        PACKET_RxState = PACKET_State_dest_addr;
         DEBUG_PRINT_OFF(("start ok\n"));
     }
     
-    // else if (PACKET_RxState == PACKET_State_start)
-    // { // looking for type byte
-    //     *PACKET_RxPtr = data_byte;
-    //     PACKET_RxPtr++;
-    //     PACKET_RxState = PACKET_State_type;
-    //     
-    // }
+    else if (PACKET_RxState == PACKET_State_dest_addr)
+    { // looking for destination address byte
+        *PACKET_RxPtr = data_byte;
+        PACKET_RxPtr++;
+        PACKET_RxState = PACKET_State_src_addr;
+        DEBUG_PRINT_OFF(("type %d\n", data_byte));
+    }
 
-    else if (PACKET_RxState == PACKET_State_type)
-    { // looking for type byte
+    else if (PACKET_RxState == PACKET_State_src_addr)
+    { // looking for source address byte
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
         PACKET_RxState = PACKET_State_length_l;
@@ -182,8 +194,16 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
     { // looking for length low byte
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
-        PACKET_RxState = PACKET_State_header_checksum;
+        PACKET_RxState = PACKET_State_payload_type;
         DEBUG_PRINT_OFF(("lenl %d\n", data_byte));
+    }
+
+    else if (PACKET_RxState == PACKET_State_payload_type)
+    { // looking for payload type byte
+        *PACKET_RxPtr = data_byte;
+        PACKET_RxPtr++;
+        PACKET_RxState = PACKET_State_header_checksum;
+        DEBUG_PRINT_OFF(("type %d\n", data_byte));
     }
 
     else if (PACKET_RxState == PACKET_State_header_checksum)
@@ -253,13 +273,6 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
             PACKET_pkt.packet_arr[i] = PACKET_RxPacket[i];
         }
 
-        //PACKET_pkt.start_flag = *PACKET_RxPacket[0];
-        //PACKET_pkt.packet_type = *PACKET_RxPacket[1];
-        //PACKET_pkt.packet_len = PACKET_len;
-        //for (i = 0; i < PACKET_len; i++)
-        // {
-        //    PACKET_pkt.packet[i] = PACKET_RxPacket[i+5];
-        // }
         return PACKET_RX_OK;
 
     }

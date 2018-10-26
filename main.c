@@ -190,16 +190,26 @@ void main(void)
 
 void handle_rx_packet(void)
 {
+    // define packet object
     PACKET_pkt_t *pkt_p;
 
+    // get settings
     SETTINGS_payload_t *stgs_pld_p;
     STATUS_payload_t *status_pld_p;
-    
+
+    // get packet handle
     pkt_p = PACKET_get_rx_packet_ptr();
+
+    // if packet is not for me, ignore it
+    if (pkt_p->dest_address != 0x01) // 0x01 is temporary address
+    {
+        return;
+    }
 
     if (pkt_p->payload_type == 0x00)
     { // type echo
-        PACKET_SendPacket(pkt_p);
+        PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
+        PACKET_UpdateAndSend(pkt_p);
     }
     else if (pkt_p->payload_type == 0x01)
     { // setting - format: [operation, command, setting_low_byte, setting_high_byte]
@@ -220,6 +230,7 @@ void handle_rx_packet(void)
                 // TODO: maybe verify?
 
                 // respond that it is done
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
             if (stgs_pld_p->load_command == STGS_PLD_CMD_LOAD_ONE)
@@ -229,6 +240,7 @@ void handle_rx_packet(void)
                 // TODO: maybe verify?
 
                 // respond that it is done
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
         }
@@ -241,6 +253,7 @@ void handle_rx_packet(void)
                 // TODO: maybe verify?
 
                 // respond that it is done
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
             if (stgs_pld_p->load_command == STGS_PLD_CMD_SAVE_ONE)
@@ -250,6 +263,7 @@ void handle_rx_packet(void)
                 // TODO: maybe verify?
 
                 // respond that it is done
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
             
@@ -261,12 +275,14 @@ void handle_rx_packet(void)
             // TODO: maybe verify?
 
             // respond that it is done
+            PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
             PACKET_UpdateAndSend(pkt_p);
         }
         else if (stgs_pld_p->operation == STGS_PLD_OP_READ)
         { // read values from settings.
             stgs_pld_p->setting_value = SETTINGS_read(&settings, stgs_pld_p->read_setting_num);
             // respond with setting
+            PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
             PACKET_UpdateAndSend(pkt_p);
         }
 
@@ -286,6 +302,7 @@ void handle_rx_packet(void)
                 status_pld_p->status_value = curr_temp;
                 // pkt_p->packet_arr[7] = curr_temp_f & 0xFF;
                 // pkt_p->packet_arr[8] = (curr_temp_f >> 8) & 0xFF;
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
             else if (status_pld_p->read_status_num == STATUS_CURR_TANK_LEVEL)
@@ -293,6 +310,7 @@ void handle_rx_packet(void)
                 status_pld_p->status_value = curr_tank_level;
                 // pkt_p->packet_arr[7] = curr_tank_level & 0xFF;
                 // pkt_p->packet_arr[8] = (curr_tank_level >> 8) & 0xFF;
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
         }
