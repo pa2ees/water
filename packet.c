@@ -171,7 +171,7 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
         PACKET_RxState = PACKET_State_src_addr;
-        DEBUG_PRINT_OFF(("type %d\n", data_byte));
+        DEBUG_PRINT_OFF(("dest_addr %d\n", data_byte));
     }
 
     else if (PACKET_RxState == PACKET_State_src_addr)
@@ -179,23 +179,23 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
         PACKET_RxState = PACKET_State_length_l;
-        DEBUG_PRINT_OFF(("type %d\n", data_byte));
+        DEBUG_PRINT_OFF(("src_addr %d\n", data_byte));
     }
 
     else if (PACKET_RxState == PACKET_State_length_l)
-    { // looking for length high byte
-        *PACKET_RxPtr = data_byte;
-        PACKET_RxPtr++;
-        PACKET_RxState = PACKET_State_length_h;
-        DEBUG_PRINT_OFF(("lenh %d\n", data_byte));
-    }
-
-    else if (PACKET_RxState == PACKET_State_length_h)
     { // looking for length low byte
         *PACKET_RxPtr = data_byte;
         PACKET_RxPtr++;
-        PACKET_RxState = PACKET_State_payload_type;
+        PACKET_RxState = PACKET_State_length_h;
         DEBUG_PRINT_OFF(("lenl %d\n", data_byte));
+    }
+
+    else if (PACKET_RxState == PACKET_State_length_h)
+    { // looking for length high byte
+        *PACKET_RxPtr = data_byte;
+        PACKET_RxPtr++;
+        PACKET_RxState = PACKET_State_payload_type;
+        DEBUG_PRINT_OFF(("lenh %d\n", data_byte));
     }
 
     else if (PACKET_RxState == PACKET_State_payload_type)
@@ -220,7 +220,8 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
             PACKET_RxState = PACKET_State_idle;
             return 0;
         }
-        PACKET_Len = (uint16_t)((PACKET_RxPacket[3] << 8) | (PACKET_RxPacket[2]));
+        PACKET_Len = (uint16_t)((PACKET_RxPacket[4] << 8) | (PACKET_RxPacket[3]));
+        DEBUG_PRINT_OFF(("packet_len: %d\n", PACKET_Len));
         PACKET_RxState = PACKET_State_payload;
         DEBUG_PRINT_OFF(("cksm ok\n"));
     }
@@ -231,6 +232,8 @@ uint8_t PACKET_handle_byte(uint8_t data_byte)
         PACKET_RxPtr++;
 
         DEBUG_PRINT_OFF(("payload %d\n", data_byte));
+        DEBUG_PRINT_OFF(("len %d\n", PACKET_RxPtr - PACKET_RxPacket));
+        DEBUG_PRINT_OFF(("exp %d\n", PACKET_Len + PACKET_HEADER_LEN));
 
         if ((PACKET_RxPtr - PACKET_RxPacket) >= (PACKET_Len + PACKET_HEADER_LEN))
         {
