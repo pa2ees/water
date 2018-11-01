@@ -208,7 +208,7 @@ void handle_rx_packet(void)
 
     if (pkt_p->payload_type == 0x00)
     { // type echo
-        PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
+        PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x02); // MUST CHANGE SRC ADDRESS
         PACKET_UpdateAndSend(pkt_p);
     }
     else if (pkt_p->payload_type == 0x01)

@@ -47,10 +47,9 @@
  *  start_flag          1
  *  dest_addr           1
  *  src_addr            1
- *  type_byte           1
  *  payload_len         2
- *  header_checksum     1
  *  payload_type        1
+ *  header_checksum     1
  * 
  * Payload:
  *  Description         No. Bytes
@@ -106,8 +105,8 @@ typedef union {
                     SETTINGS_payload_t stgs_payload;
                     STATUS_payload_t status_payload;
                 };
-                uint8_t checksum;
-                uint8_t end_flag;
+                uint8_t checksum; // can ONLY be used in conjunction with stgs_payload or status_payload!!
+                uint8_t end_flag; // this also
             };
         };
     };

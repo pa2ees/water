@@ -36,9 +36,12 @@ void PACKET_UpdateAndSend(PACKET_pkt_t *pkt)
 {
     //uint8_t cksm;
     DEBUG_PRINT_OFF(("Update and Send\n"));
-    pkt->header_checksum = PACKET_calculate_checksum(pkt->packet_arr, PACKET_HEADER_LEN);
-    pkt->checksum = PACKET_calculate_checksum(pkt->packet_arr, pkt->payload_len + PACKET_HEADER_LEN);
-    
+    pkt->header_checksum = PACKET_calculate_checksum(pkt->packet_arr, PACKET_HEADER_LEN-1);
+
+    uint8_t* checksum_p = (uint8_t*) pkt->packet_arr + pkt->payload_len + PACKET_HEADER_LEN;
+
+    *checksum_p = PACKET_calculate_checksum(pkt->packet_arr, pkt->payload_len + PACKET_HEADER_LEN);
+
     PACKET_SendPacket(pkt);
 }
 
