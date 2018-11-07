@@ -206,12 +206,12 @@ void handle_rx_packet(void)
         return;
     }
 
-    if (pkt_p->payload_type == 0x00)
+    if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_ECHO)
     { // type echo
         PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x02); // MUST CHANGE SRC ADDRESS
         PACKET_UpdateAndSend(pkt_p);
     }
-    else if (pkt_p->payload_type == 0x01)
+    else if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_SETTING)
     { // setting - format: [operation, command, setting_low_byte, setting_high_byte]
         if (pkt_p->payload_len < 4)
         { // malformed
@@ -288,7 +288,7 @@ void handle_rx_packet(void)
 
 
     }
-    else if (pkt_p->payload_type == 0x02)
+    else if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_STATUS)
     { // type status - format: [operation, command, status_low_byte, status_high_byte]
 
         status_pld_p = &(pkt_p->status_payload);
@@ -300,19 +300,16 @@ void handle_rx_packet(void)
             if (status_pld_p->read_status_num == STATUS_CURR_TEMP)
             { // get current temp
                 status_pld_p->status_value = curr_temp;
-                // pkt_p->packet_arr[7] = curr_temp_f & 0xFF;
-                // pkt_p->packet_arr[8] = (curr_temp_f >> 8) & 0xFF;
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
             else if (status_pld_p->read_status_num == STATUS_CURR_TANK_LEVEL)
             { // get current tank level
                 status_pld_p->status_value = curr_tank_level;
-                // pkt_p->packet_arr[7] = curr_tank_level & 0xFF;
-                // pkt_p->packet_arr[8] = (curr_tank_level >> 8) & 0xFF;
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
                 PACKET_UpdateAndSend(pkt_p);
             }
+            
         }
     }
 

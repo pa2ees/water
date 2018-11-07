@@ -69,6 +69,11 @@
 #define PACKET_CHECKSUM_OK 	   0
 #define PACKET_RX_OK           1
 
+#define PACKET_PAYLOAD_TYPE_ECHO 0x00
+#define PACKET_PAYLOAD_TYPE_SETTING 0x01
+#define PACKET_PAYLOAD_TYPE_STATUS 0x02
+
+
 typedef enum {PACKET_State_idle,
               PACKET_State_start,
               PACKET_State_dest_addr,
