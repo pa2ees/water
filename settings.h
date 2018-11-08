@@ -22,13 +22,15 @@
 #define STGS_PLD_CMD_SAVE_ONE 1
 
 // settings numbers
-#define STGS_TANK_PUMP_TURN_ON_LEVEL 0
-#define STGS_TANK_PUMP_TURN_OFF_LEVEL 1
+#define STGS_ADDRESS 0
+#define STGS_TANK_PUMP_TURN_ON_LEVEL 1
+#define STGS_TANK_PUMP_TURN_OFF_LEVEL 2
 
-#define STGS_NUM_OF_SETTINGS 2
+#define STGS_NUM_OF_SETTINGS 3
 
 typedef union{
     struct{
+        uint16_t address;
         uint16_t tank_pump_turn_on_level;
         uint16_t tank_pump_turn_off_level;
     };
