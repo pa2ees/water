@@ -5,6 +5,8 @@
 #include <stdint.h>
 #include "settings.h"
 #include "status.h"
+#include "packet.h"
+#include "eeprom.h"
 
 extern SETTINGS_settings_t settings;
 extern STATUS_curr_status_t curr_status;

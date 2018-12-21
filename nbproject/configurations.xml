@@ -20,6 +20,8 @@
       <itemPath>common.h</itemPath>
       <itemPath>eeprom.h</itemPath>
       <itemPath>settings.h</itemPath>
+      <itemPath>payload.h</itemPath>
+      <itemPath>status.h</itemPath>
     </logicalFolder>
     <logicalFolder name="LinkerScript"
                    displayName="Linker Files"
@@ -44,6 +46,8 @@
       <itemPath>packet.c</itemPath>
       <itemPath>eeprom.c</itemPath>
       <itemPath>settings.c</itemPath>
+      <itemPath>payload.c</itemPath>
+      <itemPath>status.c</itemPath>
     </logicalFolder>
     <logicalFolder name="ExternalFiles"
                    displayName="Important Files"

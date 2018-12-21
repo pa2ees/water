@@ -162,6 +162,13 @@ void handle_rx_packet(void)
                 PACKET_UpdateAndSend(pkt_p);
                 
             }
+            else
+            {
+                status_pld_p->status_num = STATUS_ERROR;
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01);
+                PACKET_UpdateAndSend(pkt_p);
+                    
+            }
             
         }
     }

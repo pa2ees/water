@@ -1,6 +1,10 @@
 #ifndef STATUS_H
 #define STATUS_H
 
+#include <xc.h>
+#include <stdint.h>
+
+
 // status payload operations
 // #define STATUS_PLD_OP_LOAD 0
 // #define STATUS_PLD_OP_SAVE 1
@@ -10,11 +14,12 @@
 // status numbers
 #define STATUS_CURR_TEMP 0
 #define STATUS_CURR_TANK_LEVEL 1
-#define STATUS_FILLING 3
-#define STATUS_PUMPING 4
-#define STATUS_FILLING_VALVE_CURRENT 5
-#define STATUS_PUMP_CURRENT 6
-#define STATUS_NUM_OF_STATUSES 7
+#define STATUS_FILLING 2
+#define STATUS_PUMPING 3
+#define STATUS_FILLING_VALVE_CURRENT 4
+#define STATUS_PUMP_CURRENT 5
+#define STATUS_NUM_OF_STATUSES 6
+#define STATUS_ERROR 255
 // status writable mask
 #define STATUS_WRITABLE // not sure how to do this
 
