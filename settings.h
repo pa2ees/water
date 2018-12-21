@@ -35,7 +35,9 @@ typedef union{
         uint16_t tank_pump_turn_off_level;
     };
     uint16_t arr[STGS_NUM_OF_SETTINGS];
-}settings_t;
+}SETTINGS_settings_t;
+
+// extern SETTINGS_settings_t settings;
 
 /**************
  * operations
@@ -87,8 +89,8 @@ void SETTINGS_save_all_to_eeprom(settings_t *stgs);
 void SETTINGS_load_all_from_eeprom(settings_t *stgs);
 */
 
-void SETTINGS_write(settings_t *stgs, uint8_t setting_num, uint16_t setting_val);
-uint16_t SETTINGS_read(settings_t *stgs, uint8_t setting_num);
+void SETTINGS_write(SETTINGS_settings_t *stgs, uint8_t setting_num, uint16_t setting_val);
+uint16_t SETTINGS_read(SETTINGS_settings_t *stgs, uint8_t setting_num);
 
 
 

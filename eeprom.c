@@ -1,8 +1,8 @@
 #include "eeprom.h"
 
-__eeprom settings_t SETTINGS_stgs;
+__eeprom SETTINGS_settings_t SETTINGS_stgs;
 
-void EEPROM_load_all_settings(settings_t *s)
+void EEPROM_load_all_settings(SETTINGS_settings_t *s)
 {
     uint8_t i;
     for (i = 0; i < STGS_NUM_OF_SETTINGS; i++)
@@ -13,12 +13,12 @@ void EEPROM_load_all_settings(settings_t *s)
     //s->tank_pump_turn_off_level = settings.tank_pump_turn_off_level;
 }
 
-void EEPROM_load_setting(settings_t *s, uint8_t num)
+void EEPROM_load_setting(SETTINGS_settings_t *s, uint8_t num)
 {
     s->arr[num] = SETTINGS_stgs.arr[num];
 }
 
-void EEPROM_store_all_settings(settings_t *s)
+void EEPROM_store_all_settings(SETTINGS_settings_t *s)
 {
     uint8_t i;
     for (i = 0; i < STGS_NUM_OF_SETTINGS; i++)
@@ -29,7 +29,7 @@ void EEPROM_store_all_settings(settings_t *s)
     //settings.tank_pump_turn_off_level = s->tank_pump_turn_off_level;
 }
 
-void EEPROM_store_setting(settings_t *s, uint8_t num)
+void EEPROM_store_setting(SETTINGS_settings_t *s, uint8_t num)
 {
     SETTINGS_stgs.arr[num] = s->arr[num];
 }

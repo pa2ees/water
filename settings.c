@@ -22,12 +22,14 @@ void SETTINGS_load_all_from_eeprom(settings_t *stgs)
 }
 */
 
-void SETTINGS_write(settings_t *stgs, uint8_t setting_num, uint16_t setting_val)
+SETTINGS_settings_t settings;
+
+void SETTINGS_write(SETTINGS_settings_t *stgs, uint8_t setting_num, uint16_t setting_val)
 {
     stgs->arr[setting_num] = setting_val;
 }
 
-uint16_t SETTINGS_read(settings_t *stgs, uint8_t setting_num)
+uint16_t SETTINGS_read(SETTINGS_settings_t *stgs, uint8_t setting_num)
 {
     return stgs->arr[setting_num];
 }

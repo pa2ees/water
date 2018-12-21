@@ -46,6 +46,7 @@
 #include "eeprom.h"
 #include "settings.h"
 #include "status.h"
+#include "payload.h"
 
 #define TANK_MIN_LEVEL 200
 #define V_TEMP_MIN 500
@@ -53,7 +54,9 @@
 #define INITIAL_TANK_PUMP_TURN_OFF_LEVEL 267 + TANK_MIN_LEVEL
 void handle_rx_packet(void);
 
-settings_t settings;
+// extern settings_t settings;
+// extern STATUS_curr_status_t curr_status;
+
 uint16_t curr_tank_level, curr_temp;
 
 /*
@@ -110,7 +113,8 @@ void main(void)
         // temp_f = (uint16_t) (temp * (9.0 / 5.0) + 32);
 
         curr_temp = temp;
-
+        curr_status.arr[STATUS_CURR_TEMP] = temp;
+        
         //ADC_SelectChannel(channel_Temp);
         //ADC_TemperatureAcquisitionDelay();
         //temp_int = ADC_GetConversion(channel_Temp);
@@ -122,6 +126,8 @@ void main(void)
         
         // don't go negative
         if (level < TANK_MIN_LEVEL) {level = TANK_MIN_LEVEL;} 
+
+        /*
         if (level < settings.tank_pump_turn_on_level)
         {
             // Turn on fill valves
@@ -132,37 +138,36 @@ void main(void)
             Fill_SW_SetLow();
         }
         
+        */
+
         // convert millivolts to water height in inches (11.25 per inch))
         // level_ft = ((level) - TANK_MIN_LEVEL) / 45 * 4;
         curr_tank_level = level;
+        curr_status.arr[STATUS_CURR_TANK_LEVEL] = level;
+
         // NOTE: I probably should leave this to the python code to convert
         // and just deal with raw level data on the pic
 
 
         
-        //RS485_TX_EN_SetHigh();
-        
-        send_data_ptr = send_data;
-        *send_data_ptr = (temp_f >> 8) & 0xFF;
-        send_data_ptr++;
-        *send_data_ptr = temp_f & 0xFF;
-        
-        //send_packet_len = PACKET_CreatePacket(2, send_data, send_packet, PACKET_Type_temp);
-        //for (i = 0; i < send_packet_len; i++)
-        //{
-            //EUSART_Write(send_packet[i]);
-        //}
+        if (curr_status.arr[STATUS_FILLING])
+        {
+            Fill_SW_SetHigh();
+        }
+        else
+        {
+            Fill_SW_SetLow();
+        }
 
-        send_data_ptr = send_data;
-        *send_data_ptr = (level_ft >> 8) & 0xFF;
-        send_data_ptr++;
-        *send_data_ptr = level_ft & 0xFF;
-        
-        //send_packet_len = PACKET_CreatePacket(2, send_data, send_packet, PACKET_Type_level);
-        //for (i = 0; i < send_packet_len; i++)
-        //{
-            //EUSART_Write(send_packet[i]);
-        //}
+        if (curr_status.arr[STATUS_PUMPING])
+        {
+            Pump_SW_SetHigh();
+        }
+        else
+        {
+            Pump_SW_SetLow();
+        }
+
 
 
         if (PACKET_Available())
@@ -188,133 +193,6 @@ void main(void)
 }
 
 
-void handle_rx_packet(void)
-{
-    // define packet object
-    PACKET_pkt_t *pkt_p;
-
-    // get settings
-    SETTINGS_payload_t *stgs_pld_p;
-    STATUS_payload_t *status_pld_p;
-
-    // get packet handle
-    pkt_p = PACKET_get_rx_packet_ptr();
-
-    // if packet is not for me, ignore it
-    if (pkt_p->dest_address != 0x01) // 0x01 is temporary address
-    {
-        return;
-    }
-
-    if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_ECHO)
-    { // type echo
-        PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x02); // MUST CHANGE SRC ADDRESS
-        PACKET_UpdateAndSend(pkt_p);
-    }
-    else if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_SETTING)
-    { // setting - format: [operation, command, setting_low_byte, setting_high_byte]
-        if (pkt_p->payload_len < 4)
-        { // malformed
-            // send packet bad message
-            return;
-        }
-
-        stgs_pld_p = &(pkt_p->stgs_payload);
-
-        if (stgs_pld_p->operation == STGS_PLD_OP_LOAD)
-        { // operation load_from_eeprom
-            if (stgs_pld_p->load_command == STGS_PLD_CMD_LOAD_ALL)
-            { // load all 
-                //SETTINGS_load_all_from_eeprom(&settings);
-                EEPROM_load_all_settings(&settings);
-                // TODO: maybe verify?
-
-                // respond that it is done
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            if (stgs_pld_p->load_command == STGS_PLD_CMD_LOAD_ONE)
-            { // load specific setting
-                //SETTINGS_load_from_eeprom(&settings, stgs_pld_p->load_setting_num);
-                EEPROM_load_setting(&settings, stgs_pld_p->load_setting_num);
-                // TODO: maybe verify?
-
-                // respond that it is done
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-        }
-        else if (stgs_pld_p->operation == STGS_PLD_OP_SAVE)
-        {
-            if (stgs_pld_p->load_command == STGS_PLD_CMD_SAVE_ALL)
-            { // store all
-                //SETTINGS_save_all_to_eeprom(&settings);
-                EEPROM_store_all_settings(&settings);
-                // TODO: maybe verify?
-
-                // respond that it is done
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            if (stgs_pld_p->load_command == STGS_PLD_CMD_SAVE_ONE)
-            { // store specific setting
-                //SETTINGS_save_to_eeprom(&settings, stgs_pld_p->load_setting_num);
-                EEPROM_store_setting(&settings, stgs_pld_p->load_setting_num);
-                // TODO: maybe verify?
-
-                // respond that it is done
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            
-        }
-
-        else if (stgs_pld_p->operation == STGS_PLD_OP_WRITE)
-        { // write values to settings
-            SETTINGS_write(&settings, stgs_pld_p->write_setting_num, stgs_pld_p->setting_value);
-            // TODO: maybe verify?
-
-            // respond that it is done
-            PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-            PACKET_UpdateAndSend(pkt_p);
-        }
-        else if (stgs_pld_p->operation == STGS_PLD_OP_READ)
-        { // read values from settings.
-            stgs_pld_p->setting_value = SETTINGS_read(&settings, stgs_pld_p->read_setting_num);
-            // respond with setting
-            PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-            PACKET_UpdateAndSend(pkt_p);
-        }
-
-
-    }
-    else if (pkt_p->payload_type == PACKET_PAYLOAD_TYPE_STATUS)
-    { // type status - format: [operation, command, status_low_byte, status_high_byte]
-
-        status_pld_p = &(pkt_p->status_payload);
-
-        if (status_pld_p->operation == STATUS_PLD_OP_READ)
-        { // read status
-
-
-            if (status_pld_p->read_status_num == STATUS_CURR_TEMP)
-            { // get current temp
-                status_pld_p->status_value = curr_temp;
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            else if (status_pld_p->read_status_num == STATUS_CURR_TANK_LEVEL)
-            { // get current tank level
-                status_pld_p->status_value = curr_tank_level;
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, 0x01); // MUST CHANGE SRC ADDRESS
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            
-        }
-    }
-
-
-}
 /**
  End of File
 */

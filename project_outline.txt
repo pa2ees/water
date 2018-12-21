@@ -1,3 +1,30 @@
+Architecture
+ - server is master
+ - nodes have fail-safe states
+ - nodes are all controlled by master
+ - nodes will go to fail-safe state after comms inactivity of 10 minutes
+ - nodes only do things when told to by master
+ - master must continually update nodes (so they don't go to fail-safe state)
+
+Tank Controller Node
+ - Node addresses 0b01xx xxxx
+ - sense water level
+ - sense full/overflow/empty/critically_empty switches (do we need all those?)
+ - turn on/off fill valves
+ - turn on/off sprinkler pump
+ - sprinkler pump current sense (ACS730)
+ - fill valve current sense (ACS711)
+
+valve controller node
+ - node addresses 0b10xx xxxx
+ - turn on/off valve
+ - valve current sense (ACS711)
+ - temp sense
+
+master node (server?)
+ - node address 0b0000 0001
+
+
 Tank Controller
  - Pressure based water level sensor (should there be one in each tank?)
  - overflow float switch (should there be a redundant one? one in each tank?)
@@ -7,7 +34,13 @@ Tank Controller
  - Sprinkler pump turn on/off
  - sense current of sprinkler pump relay
  - sense current of sprinkler pump itself?
-
+ - settings
+   - address
+   - tank turn on level
+   - tank turn off level
+   - action timeout
+     - Some actions time out and revert to a safe mode (ie. )
+   
 valve controller
  - turn on/off valve
  - sense current of valve (to make sure it's on, and not shorted)

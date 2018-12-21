@@ -19,10 +19,10 @@
 #define EE_PKT_CMD_STORE_NUM 3
 
 
-void EEPROM_load_all_settings(settings_t *s);
-void EEPROM_load_setting(settings_t *s, uint8_t num);
-void EEPROM_store_all_settings(settings_t *s);
-void EEPROM_store_setting(settings_t *s, uint8_t num);
+void EEPROM_load_all_settings(SETTINGS_settings_t *s);
+void EEPROM_load_setting(SETTINGS_settings_t *s, uint8_t num);
+void EEPROM_store_all_settings(SETTINGS_settings_t *s);
+void EEPROM_store_setting(SETTINGS_settings_t *s, uint8_t num);
 
 
 #endif /* EEPROM_H */
