@@ -55,7 +55,7 @@
 
 void update_statuses(void);
 
-// extern settings_t settings;
+// extern SETTINGS_settings_t settings;
 // extern STATUS_curr_status_t curr_status;
 
 

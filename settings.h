@@ -37,7 +37,7 @@ typedef union{
     uint16_t arr[STGS_NUM_OF_SETTINGS];
 }SETTINGS_settings_t;
 
-// extern SETTINGS_settings_t settings;
+extern SETTINGS_settings_t settings;
 
 /**************
  * operations
