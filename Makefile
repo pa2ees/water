@@ -130,7 +130,7 @@ program-no-eeprom: .prog-impl-no-eeprom
 	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -M -OL -P$(PROC)
 
 .prog-impl-no-eeprom:
-	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -MP -OL -P$(PROC)
+	$(MP_JAVA_PATH)java -jar $(PATH_TO_IPE_JAR)$(IPE_JAR_NAME) -TPPK3 -F$(FINAL_IMAGE) -M -OL -Z0-0FF -P$(PROC)
 
 
 # include project implementation makefile
