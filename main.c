@@ -98,6 +98,14 @@ void main(void)
     {
         //__delay_ms(10);
         update_statuses();
+
+        if (curr_status.arr[STATUS_FAILSAFE_TIMER] == 0)
+        {
+            Fill_SW_SetLow();
+            Pump_SW_SetLow();
+            curr_status.arr[STATUS_FILLING] = 0;
+            curr_status.arr[STATUS_PUMPING] = 0;
+        }
         
         if (curr_status.arr[STATUS_FILLING])
         {
@@ -119,12 +127,11 @@ void main(void)
 
         if (PACKET_Available())
         {
-            //DEBUG_PRINT(("packet available"));
             DEBUG_PRINT_OFF(("packet available\n"));
             handle_rx_packet();
 
         }
-        
+        STATUS_tick_failsafe_timer();
         
     }
 }

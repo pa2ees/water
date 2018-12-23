@@ -6,6 +6,7 @@
  */
 
 #include "payload.h"
+#include "status.h"
 
 
 void handle_rx_packet(void)
@@ -112,7 +113,10 @@ void handle_rx_packet(void)
         if (status_pld_p->operation == STATUS_PLD_OP_READ)
         { // read status
 
-
+            status_pld_p->status_value = curr_status.arr[status_pld_p->status_num];
+            PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
+            PACKET_UpdateAndSend(pkt_p);
+            /*
             if (status_pld_p->status_num == STATUS_CURR_TEMP)
             { // get current temp
                 status_pld_p->status_value = curr_status.arr[STATUS_CURR_TEMP];
@@ -137,7 +141,7 @@ void handle_rx_packet(void)
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
                 PACKET_UpdateAndSend(pkt_p);
             }
-
+            */
             
         }
         else if (status_pld_p->operation == STATUS_PLD_OP_WRITE)
@@ -148,6 +152,7 @@ void handle_rx_packet(void)
                 status_pld_p->status_value = curr_status.arr[STATUS_FILLING];
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
                 PACKET_UpdateAndSend(pkt_p);
+                STATUS_update_failsafe_timer();
                 
             }
             if (status_pld_p->status_num == STATUS_PUMPING)
@@ -156,7 +161,7 @@ void handle_rx_packet(void)
                 status_pld_p->status_value = curr_status.arr[STATUS_PUMPING];
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
                 PACKET_UpdateAndSend(pkt_p);
-                
+                STATUS_update_failsafe_timer();
             }
             else
             { // cannot write to any settings not handled above

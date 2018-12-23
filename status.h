@@ -12,17 +12,19 @@
 #define STATUS_PLD_OP_READ 3
 
 // status numbers
-#define STATUS_CURR_TEMP 0
-#define STATUS_CURR_TANK_LEVEL 1
-#define STATUS_FILLING 2
-#define STATUS_PUMPING 3
-#define STATUS_FILLING_VALVE_CURRENT 4
-#define STATUS_PUMP_CURRENT 5
-#define STATUS_NUM_OF_STATUSES 6
+#define STATUS_FAILSAFE_TIMER 0
+#define STATUS_CURR_TEMP 1
+#define STATUS_CURR_TANK_LEVEL 2
+#define STATUS_FILLING 3
+#define STATUS_PUMPING 4
+#define STATUS_FILLING_VALVE_CURRENT 5
+#define STATUS_PUMP_CURRENT 6
+#define STATUS_NUM_OF_STATUSES 7
 #define STATUS_ERROR 255
 // status writable mask
 #define STATUS_WRITABLE // not sure how to do this
 
+#define STATUS_FAILSAFE_TIMER_SET_VAL 0xA000;
 
 typedef union {
     __pack struct {
@@ -42,6 +44,7 @@ typedef union {
 
 typedef union {
     struct{
+        uint16_t failsafe_timer;
         uint16_t curr_temp;
         uint16_t curr_tank_level;
         uint16_t filling;
@@ -52,6 +55,10 @@ typedef union {
     uint16_t arr[STATUS_NUM_OF_STATUSES];
 
 }STATUS_curr_status_t;
+
+
+void STATUS_update_failsafe_timer(void);
+void STATUS_tick_failsafe_timer(void);
 
 // extern STATUS_curr_status_t curr_status;
 
