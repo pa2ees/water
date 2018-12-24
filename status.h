@@ -22,9 +22,13 @@
 #define STATUS_NUM_OF_STATUSES 7
 #define STATUS_ERROR 255
 // status writable mask
-#define STATUS_WRITABLE // not sure how to do this
 
-#define STATUS_FAILSAFE_TIMER_SET_VAL 0xA000;
+// for now, this is just a binary array where each bit represents the corresponding number
+// status, and whether it is writable or not (1 = writable)
+#define STATUS_WRITABLE 0b00011000
+
+
+#define STATUS_FAILSAFE_TIMER_SET_VAL 0xA000
 
 typedef union {
     __pack struct {
@@ -59,6 +63,8 @@ typedef union {
 
 void STATUS_update_failsafe_timer(void);
 void STATUS_tick_failsafe_timer(void);
+uint16_t STATUS_write(STATUS_curr_status_t *status, uint8_t status_num, uint16_t status_val);
+uint16_t STATUS_read(STATUS_curr_status_t *status, uint8_t status_num);
 
 // extern STATUS_curr_status_t curr_status;
 

@@ -113,62 +113,25 @@ void handle_rx_packet(void)
         if (status_pld_p->operation == STATUS_PLD_OP_READ)
         { // read status
 
-            status_pld_p->status_value = curr_status.arr[status_pld_p->status_num];
+            status_pld_p->status_value = STATUS_read(&curr_status, status_pld_p->status_num);
             PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
             PACKET_UpdateAndSend(pkt_p);
-            /*
-            if (status_pld_p->status_num == STATUS_CURR_TEMP)
-            { // get current temp
-                status_pld_p->status_value = curr_status.arr[STATUS_CURR_TEMP];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            else if (status_pld_p->status_num == STATUS_CURR_TANK_LEVEL)
-            { // get current tank level
-                status_pld_p->status_value = curr_status.arr[STATUS_CURR_TANK_LEVEL];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            else if (status_pld_p->status_num == STATUS_FILLING)
-            { // get filling status
-                status_pld_p->status_value = curr_status.arr[STATUS_FILLING];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            else if (status_pld_p->status_num == STATUS_PUMPING)
-            { // get pumping status
-                status_pld_p->status_value = curr_status.arr[STATUS_PUMPING];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-            }
-            */
             
         }
         else if (status_pld_p->operation == STATUS_PLD_OP_WRITE)
         { // write status
-            if (status_pld_p->status_num == STATUS_FILLING)
-            { // write filling status (turn on/off filling)
-                curr_status.arr[STATUS_FILLING] = status_pld_p->status_value;
-                status_pld_p->status_value = curr_status.arr[STATUS_FILLING];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-                STATUS_update_failsafe_timer();
-                
-            }
-            if (status_pld_p->status_num == STATUS_PUMPING)
-            { // write pumping status (turn on/off sprinkler pump)
-                curr_status.arr[STATUS_PUMPING] = status_pld_p->status_value;
-                status_pld_p->status_value = curr_status.arr[STATUS_PUMPING];
-                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
-                PACKET_UpdateAndSend(pkt_p);
-                STATUS_update_failsafe_timer();
-            }
-            else
-            { // cannot write to any settings not handled above
+            if (STATUS_write(&curr_status, status_pld_p->status_num, status_pld_p->status_value))
+            { // got error, unwritable status
                 status_pld_p->status_num = STATUS_ERROR;
                 PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
                 PACKET_UpdateAndSend(pkt_p);
-                    
+            }
+            else
+            { // wrote status ok
+                status_pld_p->status_value = STATUS_read(&curr_status, status_pld_p->status_num);
+                PACKET_UpdateAddresses(pkt_p, pkt_p->src_address, SETTINGS_read(&settings, STGS_ADDRESS));
+                PACKET_UpdateAndSend(pkt_p);
+                STATUS_update_failsafe_timer();
             }
             
         }
