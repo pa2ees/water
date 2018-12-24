@@ -99,15 +99,15 @@ void main(void)
         //__delay_ms(10);
         update_statuses();
 
-        if (curr_status.arr[STATUS_FAILSAFE_TIMER] == 0)
+        if (STATUS_read(&curr_status, STATUS_FAILSAFE_TIMER) == 0)
         {
             Fill_SW_SetLow();
             Pump_SW_SetLow();
-            curr_status.arr[STATUS_FILLING] = 0;
-            curr_status.arr[STATUS_PUMPING] = 0;
+            STATUS_write(&curr_status, STATUS_FILLING, 0);
+            STATUS_write(&curr_status, STATUS_PUMPING, 0);
         }
         
-        if (curr_status.arr[STATUS_FILLING])
+        if (STATUS_read(&curr_status, STATUS_FILLING))
         {
             Fill_SW_SetHigh();
         }
@@ -116,7 +116,7 @@ void main(void)
             Fill_SW_SetLow();
         }
 
-        if (curr_status.arr[STATUS_PUMPING])
+        if (STATUS_read(&curr_status, STATUS_PUMPING))
         {
             Pump_SW_SetHigh();
         }
@@ -145,7 +145,7 @@ void update_statuses(void)
     // convert adc count to millivolts
     temp = temp * 2;
     
-    curr_status.arr[STATUS_CURR_TEMP] = temp;
+    STATUS_write(&curr_status, STATUS_CURR_TEMP, temp);
     
     //ADC_SelectChannel(channel_Temp);
     //ADC_TemperatureAcquisitionDelay();
@@ -158,7 +158,7 @@ void update_statuses(void)
     // don't go negative
     if (level < TANK_MIN_LEVEL) {level = TANK_MIN_LEVEL;} 
     
-    curr_status.arr[STATUS_CURR_TANK_LEVEL] = level;
+    STATUS_write(&curr_status, STATUS_CURR_TANK_LEVEL, level);
 
     return;
 
